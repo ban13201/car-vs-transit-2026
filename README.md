@@ -18,6 +18,3 @@
 - `calc.js` : 계산 로직 모듈
 - `validate.js` : 입력 검증(엣지케이스)
 - `app.js` : 이벤트/렌더링
-
-## 배포(선택)
-- GitHub Pages 또는 Netlify/Vercel에 업로드하면 배포 URL 제출이 가능합니다.
