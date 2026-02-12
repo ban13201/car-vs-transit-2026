@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CommuteChoice | 자차 vs 대중교통 총비용 비교</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>CommuteChoice</h1>
+    <p class="subtitle">생활패턴 기준으로 <b>자차 vs 대중교통</b> 총비용(TCO)과 손익분기점을 계산합니다.</p>
+  </header>
+
+  <main class="container grid">
+    <!-- INPUT -->
+    <section class="card">
+      <h2>입력</h2>
+
+      <div class="section-title">분석 기간</div>
+      <div class="row">
+        <label>기간(N년, 1~10)</label>
+        <input id="years" type="number" min="1" max="10" step="1" value="5" />
+      </div>
+
+      <div class="section-title">출퇴근 패턴</div>
+      <div class="row">
+        <label>주당 출퇴근 횟수(왕복 기준)</label>
+        <input id="commuteDaysPerWeek" type="number" min="0" max="14" step="1" value="5" />
+      </div>
+      <div class="row">
+        <label>왕복 거리(km)</label>
+        <input id="roundTripKm" type="number" min="0" step="0.1" value="40" />
+      </div>
+
+      <div class="section-title">소요 시간</div>
+      <div class="row">
+        <label>자차 소요시간(분/왕복)</label>
+        <input id="carMinutes" type="number" min="0" step="1" value="60" />
+      </div>
+      <div class="row">
+        <label>대중교통 소요시간(분/왕복)</label>
+        <input id="transitMinutes" type="number" min="0" step="1" value="90" />
+      </div>
+
+      <div class="section-title">시간 가치(기회비용)</div>
+      <div class="row">
+        <label class="inline">
+          <input id="useTimeValue" type="checkbox" checked />
+          시간 가치를 비용에 반영
+        </label>
+      </div>
+      <div class="row">
+        <label>시급(원/시간)</label>
+        <input id="hourlyWage" type="number" min="0" step="100" value="15000" />
+      </div>
+
+      <div class="section-title">자차 비용</div>
+      <div class="row">
+        <label>차량 구매가(원)</label>
+        <input id="carPrice" type="number" min="0" step="10000" value="20000000" />
+      </div>
+      <div class="row">
+        <label>기간 종료 시 잔존가(원)</label>
+        <input id="residualValue" type="number" min="0" step="10000" value="9000000" />
+      </div>
+      <div class="row">
+        <label>연비(km/L)</label>
+        <input id="fuelEfficiency" type="number" min="0" step="0.1" value="12" />
+      </div>
+      <div class="row">
+        <label>유류 단가(원/L)</label>
+        <input id="fuelPricePerLiter" type="number" min="0" step="10" value="1700" />
+      </div>
+      <div class="row">
+        <label>보험/정비/세금(연, 원)</label>
+        <input id="annualCarFixed" type="number" min="0" step="10000" value="1500000" />
+      </div>
+      <div class="row">
+        <label>주차비(월, 원)</label>
+        <input id="monthlyParking" type="number" min="0" step="10000" value="150000" />
+      </div>
+      <div class="row">
+        <label>통행료/기타(월, 원)</label>
+        <input id="monthlyTollEtc" type="number" min="0" step="10000" value="50000" />
+      </div>
+
+      <div class="section-title">대중교통 비용</div>
+      <div class="row">
+        <label>교통비(월, 원)</label>
+        <input id="monthlyTransit" type="number" min="0" step="10000" value="90000" />
+      </div>
+      <div class="row">
+        <label>추가비(택시 등, 월, 원)</label>
+        <input id="monthlyTransitExtra" type="number" min="0" step="10000" value="20000" />
+      </div>
+
+      <div class="actions">
+        <button id="btnCalc" class="primary">계산하기</button>
+        <button id="btnReset" class="ghost">기본값으로</button>
+      </div>
+
+      <div id="errors" class="errors" aria-live="polite"></div>
+      <p class="hint">
+        * 결과는 의사결정 보조용이며 실제 비용과 차이가 있을 수 있습니다.
+      </p>
+    </section>
+
+    <!-- OUTPUT -->
+    <section class="card">
+      <h2>결과</h2>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-title">자차 N년 누적</div>
+          <div id="kpiCar" class="kpi-value">-</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-title">대중교통 N년 누적</div>
+          <div id="kpiTransit" class="kpi-value">-</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-title">손익분기점</div>
+          <div id="kpiBreakeven" class="kpi-value">-</div>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">연간 주행거리(자동 계산)</div>
+        <div id="annualKm" class="mono">-</div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">적용된 시간가치 규칙</div>
+        <div id="timeRule" class="small">-</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>연도</th>
+              <th>자차 연간</th>
+              <th>대중교통 연간</th>
+              <th>자차 누적</th>
+              <th>대중교통 누적</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="muted">계산하기를 눌러 결과를 확인하세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        <b>주의: “시간 가치 반영” 체크를 켰는지 확인하세요.</b>
+      </div>
+    </section>
+  </main>
+
+  <script src="./calc.js"></script>
+  <script src="./validate.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
